@@ -116,12 +116,12 @@ function renderCharts(data, monthFilter) {
   );
 
   charts.trend = new Chart(trendCtx, {
-    type: "bar",
+    type: "line",
     data: {
       labels: data.months,
       datasets: [
-        { label: "Pendapatan", data: incomeData, backgroundColor: "#b05f45", borderRadius: 4 },
-        { label: "Perbelanjaan", data: expMonthly, backgroundColor: "#8a9b7e", borderRadius: 4 },
+        { label: "Pendapatan", data: incomeData, borderColor: "#b05f45", backgroundColor: "rgba(176,95,69,0.12)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 },
+        { label: "Perbelanjaan", data: expMonthly, borderColor: "#8a9b7e", backgroundColor: "rgba(138,155,126,0.12)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 },
       ],
     },
     options: {
