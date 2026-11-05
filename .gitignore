@@ -1,0 +1,13 @@
+# Temporary test output
+_shots/
+_work/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Jangan commit data sebenar jika disimpan sebagai fail
+data.local.js
+*.local.csv

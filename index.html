@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mama Homestay - Dashboard Admin</title>
+  <meta name="theme-color" content="#b05f45" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b05f45'/%3E%3Cpath d='M32 14 12 32h8v18h24V32h8z' fill='%23faf5ee'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Bar notis dummy: padam sebelum guna sebenar -->
+  <div class="dummy-bar">Dashboard contoh. Semua data adalah dummy untuk tujuan paparan.</div>
+
+  <!-- Skrin kunci ringan (BUKAN keselamatan sebenar - lihat README) -->
+  <div id="lock" class="lock-screen">
+    <form class="lock-card" id="lock-form">
+      <div class="lock-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="40" height="40"><path fill="currentColor" d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>
+      </div>
+      <h1>Mama Homestay</h1>
+      <p>Dashboard Admin</p>
+      <label for="passcode" class="sr-only">Kata laluan</label>
+      <input id="passcode" type="password" inputmode="numeric" placeholder="Masukkan passcode" autocomplete="off" />
+      <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+      <p class="lock-hint">Passcode contoh: <strong>1234</strong></p>
+      <p class="lock-error" id="lock-error" role="alert"></p>
+    </form>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="side-brand">
+        <span class="side-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></span>
+        <span>Mama Homestay</span>
+      </div>
+      <nav class="side-nav">
+        <a href="#overview" class="is-active">Ringkasan</a>
+        <a href="#income">Pendapatan</a>
+        <a href="#expenses">Perbelanjaan</a>
+        <a href="#bookings">Tempahan</a>
+        <a href="#report">Laporan</a>
+      </nav>
+      <div class="side-foot">
+        <button type="button" id="logout" class="btn btn-ghost btn-block">Log keluar</button>
+      </div>
+    </aside>
+
+    <!-- Kandungan utama -->
+    <div class="main">
+      <header class="topbar">
+        <button type="button" id="menu-toggle" class="icon-btn" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="topbar-title">
+          <h1 id="page-title">Ringkasan</h1>
+          <p class="data-source" id="data-source">Sumber data: contoh (dummy)</p>
+        </div>
+        <div class="topbar-controls">
+          <label class="sr-only" for="period">Tempoh</label>
+          <select id="period">
+            <option value="2026">Tahun 2026</option>
+            <option value="2025">Tahun 2025</option>
+          </select>
+          <select id="month">
+            <option value="all">Semua bulan</option>
+          </select>
+          <button type="button" id="refresh" class="btn btn-outline">Muat semula</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- KPI -->
+        <section class="kpi-grid" id="overview" aria-label="Ringkasan utama">
+          <article class="kpi card">
+            <p class="kpi-label">Jumlah pendapatan</p>
+            <p class="kpi-value" id="kpi-income">RM0</p>
+            <p class="kpi-delta" id="kpi-income-delta"></p>
+          </article>
+          <article class="kpi card">
+            <p class="kpi-label">Jumlah perbelanjaan</p>
+            <p class="kpi-value" id="kpi-expense">RM0</p>
+            <p class="kpi-delta" id="kpi-expense-delta"></p>
+          </article>
+          <article class="kpi card">
+            <p class="kpi-label">Untung bersih</p>
+            <p class="kpi-value" id="kpi-profit">RM0</p>
+            <p class="kpi-delta" id="kpi-profit-delta"></p>
+          </article>
+          <article class="kpi card">
+            <p class="kpi-label">Kadar penghunian</p>
+            <p class="kpi-value" id="kpi-occupancy">0%</p>
+            <p class="kpi-delta" id="kpi-occupancy-sub"></p>
+          </article>
+        </section>
+
+        <!-- Carta -->
+        <section class="chart-grid">
+          <article class="card chart-card">
+            <div class="card-head">
+              <h2>Pendapatan vs Perbelanjaan</h2>
+              <span class="muted small">12 bulan</span>
+            </div>
+            <canvas id="chart-trend" height="260"></canvas>
+          </article>
+          <article class="card chart-card">
+            <div class="card-head">
+              <h2>Perbelanjaan ikut kategori</h2>
+              <span class="muted small" id="exp-cat-period">Terkini</span>
+            </div>
+            <canvas id="chart-expenses" height="260"></canvas>
+          </article>
+        </section>
+
+        <!-- Pendapatan bulanan -->
+        <section class="card table-card" id="income">
+          <div class="card-head">
+            <h2>Laporan pendapatan bulanan</h2>
+          </div>
+          <div class="table-wrap">
+            <table id="income-table">
+              <thead>
+                <tr><th>Bulan</th><th class="num">Tempahan</th><th class="num">Malam</th><th class="num">Pendapatan (RM)</th></tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </section>
+
+        <!-- Perbelanjaan -->
+        <section class="card table-card" id="expenses">
+          <div class="card-head">
+            <h2>Kira-kira perbelanjaan</h2>
+          </div>
+          <div class="table-wrap">
+            <table id="expense-table">
+              <thead>
+                <tr><th>Tarikh</th><th>Kategori</th><th>Keterangan</th><th class="num">Jumlah (RM)</th></tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tempahan -->
+        <section class="card table-card" id="bookings">
+          <div class="card-head">
+            <h2>Tempahan terkini</h2>
+          </div>
+          <div class="table-wrap">
+            <table id="booking-table">
+              <thead>
+                <tr><th>Tetamu</th><th>Pakej</th><th>Daftar masuk</th><th>Malam</th><th class="num">Jumlah (RM)</th><th>Status</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Laporan -->
+        <section class="card report-card" id="report">
+          <div class="card-head">
+            <h2>Muat turun laporan</h2>
+          </div>
+          <p class="muted">Jana laporan PDF berdasarkan tempoh yang dipilih di atas. Laporan merangkumi ringkasan, pendapatan bulanan dan perbelanjaan.</p>
+          <div class="report-actions">
+            <button type="button" id="download-pdf" class="btn btn-primary">Muat turun PDF</button>
+            <button type="button" id="download-csv" class="btn btn-outline">Muat turun CSV</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Pustaka luar (CDN percuma) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
