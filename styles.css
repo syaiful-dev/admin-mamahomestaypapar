@@ -88,9 +88,15 @@ h1, h2 { color: var(--ink); margin: 0; }
 .kpi-delta.up { color: var(--ok); font-weight: 700; }
 .kpi-delta.down { color: var(--bad); font-weight: 700; }
 
-/* Charts */
-.chart-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.4rem; }
-.chart-card canvas { width: 100% !important; }
+/* Report page */
+.report-summary { background: var(--cream); border-radius: 10px; padding: 0.7rem 1rem; color: var(--ink); font-weight: 600; }
+
+/* Quick links on the Ringkasan view */
+.quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1.4rem; }
+.quick-card { display: block; text-decoration: none; color: inherit; transition: border-color 0.15s ease, transform 0.1s ease; }
+.quick-card:hover { border-color: var(--brand); transform: translateY(-2px); }
+.quick-card h3 { margin: 0 0 0.2rem; font-size: 1.05rem; color: var(--brand); }
+.quick-card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
 /* Tables */
 .table-wrap { overflow-x: auto; }
@@ -118,10 +124,25 @@ tbody tr:hover { background: var(--cream); }
   .sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,0.4); }
   .icon-btn { display: inline-flex; }
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-  .chart-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .kpi-grid { grid-template-columns: 1fr; }
+  .quick-grid { grid-template-columns: 1fr; }
   .topbar-controls { width: 100%; }
   .topbar-controls select, .topbar-controls .btn { flex: 1; }
+
+  /* Telefon: kecilkan jarak supaya semua lajur jadual muat tanpa leret ke tepi */
+  .content { padding: 1rem; }
+  .card { padding: 1rem; }
+  th, td { padding: 0.55rem 0.4rem; white-space: normal; font-size: 0.85rem; }
+  thead th { font-size: 0.68rem; }
+  th.num, td.num, .badge { white-space: nowrap; }
+
+  /* Tempahan pada telefon: setiap tempahan jadi satu kad (6 lajur tak muat sebaris) */
+  #booking-table thead { display: none; }
+  #booking-table, #booking-table tbody, #booking-table tr, #booking-table td { display: block; width: 100%; }
+  #booking-table tr { border: 1px solid var(--border); border-radius: 12px; padding: 0.4rem 0.8rem; margin-bottom: 0.8rem; }
+  #booking-table td { display: flex; justify-content: space-between; gap: 1rem; border: 0; padding: 0.3rem 0; text-align: right; }
+  #booking-table td::before { content: attr(data-label); color: var(--muted); font-weight: 600; text-align: left; }
+  #booking-table tbody tr:hover { background: none; }
 }

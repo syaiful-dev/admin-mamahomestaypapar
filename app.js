@@ -1,34 +1,63 @@
 /* ==========================================================================
    Mama Homestay Admin - logik dashboard
+   Satu fail dikongsi oleh semua halaman (index, income, expenses, bookings,
+   report). Setiap halaman hanya menjalankan bahagian yang ada elemennya.
    ========================================================================== */
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.prototype.slice.call(document.querySelectorAll(s));
 
 const DEMO_PASSCODE = "1234"; // lihat README: ini BUKAN keselamatan sebenar
+const NEXT_PAGES = ["income.html", "expenses.html", "bookings.html", "report.html"];
 
 function fmtRM(n) {
   return CURRENCY + Number(n).toLocaleString("en-MY");
 }
 
-let charts = { trend: null, expenses: null };
-let state = { year: 2026, month: "all", data: null };
+/* Tahun & bulan dipilih disimpan supaya kekal bila pindah antara halaman. */
+function readSaved(key, fallback) {
+  try { const v = sessionStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+}
+function save(key, val) {
+  try { sessionStorage.setItem(key, String(val)); } catch (e) { /* abaikan */ }
+}
 
-/* ---------- Skrin kunci ringan ---------- */
-function setupLock() {
-  const lock = $("#lock");
+let state = {
+  year: parseInt(readSaved("mhp_admin_year", "2026"), 10) || 2026,
+  month: readSaved("mhp_admin_month", "all"),
+  data: null,
+};
+
+/* ---------- Pintu masuk: skrin kunci ringan ---------- */
+function gate() {
+  const lock = $("#lock");   // hanya wujud pada index.html
   const app = $("#app");
-  // Jika sudah "masuk" dalam sesi ini, terus tunjuk dashboard.
-  if (sessionStorage.getItem("mhp_admin_in") === "1") {
-    lock.hidden = true; app.hidden = false; init();
+  let loggedIn = false;
+  try { loggedIn = sessionStorage.getItem("mhp_admin_in") === "1"; } catch (e) { /* abaikan */ }
+
+  if (loggedIn) {
+    if (lock) lock.hidden = true;
+    app.hidden = false;
+    init();
     return;
   }
+
+  // Halaman lain (bukan index) tanpa log masuk: hantar ke index, ingat halaman asal.
+  if (!lock) {
+    const here = location.pathname.split("/").pop();
+    location.replace("index.html?next=" + encodeURIComponent(here));
+    return;
+  }
+
   $("#lock-form").addEventListener("submit", (e) => {
     e.preventDefault();
-    const val = $("#passcode").value.trim();
-    if (val === DEMO_PASSCODE) {
-      sessionStorage.setItem("mhp_admin_in", "1");
-      lock.hidden = true; app.hidden = false; init();
+    if ($("#passcode").value.trim() === DEMO_PASSCODE) {
+      save("mhp_admin_in", "1");
+      const next = new URLSearchParams(location.search).get("next");
+      if (NEXT_PAGES.indexOf(next) !== -1) { location.replace(next); return; }
+      lock.hidden = true;
+      app.hidden = false;
+      init();
     } else {
       $("#lock-error").textContent = "Passcode salah. Cuba lagi.";
     }
@@ -37,30 +66,37 @@ function setupLock() {
 
 function setupLogout() {
   $("#logout").addEventListener("click", () => {
-    sessionStorage.removeItem("mhp_admin_in");
-    location.reload();
+    try { sessionStorage.removeItem("mhp_admin_in"); } catch (e) { /* abaikan */ }
+    location.href = "index.html";
   });
 }
 
-/* ---------- Navigasi & responsif ---------- */
 function setupNav() {
-  $("#menu-toggle").addEventListener("click", () => $("#sidebar").classList.toggle("open"));
-  $$(".side-nav a").forEach((a) => {
-    a.addEventListener("click", () => {
-      $$(".side-nav a").forEach((x) => x.classList.remove("is-active"));
-      a.classList.add("is-active");
-      $("#page-title").textContent = a.textContent;
-      $("#sidebar").classList.remove("open");
-    });
-  });
+  const toggle = $("#menu-toggle");
+  if (toggle) toggle.addEventListener("click", () => $("#sidebar").classList.toggle("open"));
 }
 
-/* ---------- Penapis tempoh ---------- */
+/* ---------- Penapis tempoh (hanya pada halaman yang menggunakannya) ---------- */
 function setupFilters() {
+  const period = $("#period");
   const monthSel = $("#month");
-  MONTHS_MS.forEach((m, i) => monthSel.add(new Option(m, String(i))));
-  $("#period").addEventListener("change", (e) => { state.year = parseInt(e.target.value, 10); load(); });
-  $("#month").addEventListener("change", (e) => { state.month = e.target.value; render(); });
+
+  period.value = String(state.year);
+  period.addEventListener("change", (e) => {
+    state.year = parseInt(e.target.value, 10);
+    save("mhp_admin_year", state.year);
+    load();
+  });
+
+  if (monthSel) {
+    MONTHS_MS.forEach((m, i) => monthSel.add(new Option(m, String(i))));
+    monthSel.value = state.month;
+    monthSel.addEventListener("change", (e) => {
+      state.month = e.target.value;
+      save("mhp_admin_month", state.month);
+      render();
+    });
+  }
   $("#refresh").addEventListener("click", load);
 }
 
@@ -79,16 +115,11 @@ function totals(data, monthFilter) {
   return { income, expenses, profit: income - expenses, bookings, nights, occupancy };
 }
 
-function expenseByCategory(data, monthFilter) {
-  const map = {};
-  data.expenses.forEach((e) => {
-    if (monthFilter !== "all" && new Date(e.date).getMonth() !== parseInt(monthFilter, 10)) return;
-    map[e.category] = (map[e.category] || 0) + e.amount;
-  });
-  return map;
+function periodLabel() {
+  return state.month === "all" ? `Tahun ${state.year}` : `${MONTHS_MS[parseInt(state.month, 10)]} ${state.year}`;
 }
 
-/* ---------- Render KPI ---------- */
+/* ---------- Render ---------- */
 function renderKPI(t) {
   $("#kpi-income").textContent = fmtRM(t.income);
   $("#kpi-expense").textContent = fmtRM(t.expenses);
@@ -101,60 +132,25 @@ function renderKPI(t) {
   $("#kpi-occupancy-sub").textContent = t.nights + " malam ditempah";
 }
 
-/* ---------- Carta ---------- */
-function renderCharts(data, monthFilter) {
-  const trendCtx = $("#chart-trend");
-  const expCtx = $("#chart-expenses");
-
-  if (charts.trend) charts.trend.destroy();
-  if (charts.expenses) charts.expenses.destroy();
-
-  const incomeData = data.monthly.map((m) => m.income);
-  // Perbelanjaan setiap bulan untuk carta trend
-  const expMonthly = MONTHS_MS.map((_, i) =>
-    data.expenses.filter((e) => new Date(e.date).getMonth() === i).reduce((s, e) => s + e.amount, 0)
-  );
-
-  charts.trend = new Chart(trendCtx, {
-    type: "line",
-    data: {
-      labels: data.months,
-      datasets: [
-        { label: "Pendapatan", data: incomeData, borderColor: "#b05f45", backgroundColor: "rgba(176,95,69,0.12)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 },
-        { label: "Perbelanjaan", data: expMonthly, borderColor: "#8a9b7e", backgroundColor: "rgba(138,155,126,0.12)", fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2 },
-      ],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } },
-      scales: { y: { beginAtZero: true, ticks: { callback: (v) => "RM" + v } } },
-    },
-  });
-
-  const cat = expenseByCategory(data, monthFilter);
-  charts.expenses = new Chart(expCtx, {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(cat),
-      datasets: [{
-        data: Object.values(cat),
-        backgroundColor: ["#b05f45", "#8a9b7e", "#d99a3f", "#7da3b5", "#8aad63", "#c98d34", "#a8766a"],
-      }],
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
-  });
+function addCell(tr, text, className, label) {
+  const td = document.createElement("td");
+  if (className) td.className = className;
+  if (label) td.setAttribute("data-label", label);
+  td.textContent = text;
+  tr.appendChild(td);
+  return td;
 }
 
-/* ---------- Jadual ---------- */
 function renderIncomeTable(data) {
-  const tb = $("#income-table tbody"); tb.innerHTML = "";
+  const tb = $("#income-table tbody"); tb.textContent = "";
   let ti = 0, tbk = 0, tn = 0;
   data.monthly.forEach((m, i) => {
     ti += m.income; tbk += m.bookings; tn += m.nights;
     const tr = document.createElement("tr");
-    [data.months[i], m.bookings, m.nights, fmtRM(m.income)].forEach((v, idx) => {
-      const td = document.createElement("td"); if (idx > 0) td.className = "num"; td.textContent = v; tr.appendChild(td);
-    });
+    addCell(tr, data.months[i]);
+    addCell(tr, m.bookings, "num");
+    addCell(tr, m.nights, "num");
+    addCell(tr, fmtRM(m.income), "num");
     tb.appendChild(tr);
   });
   $("#income-table tfoot").innerHTML =
@@ -162,15 +158,16 @@ function renderIncomeTable(data) {
 }
 
 function renderExpenseTable(data, monthFilter) {
-  const tb = $("#expense-table tbody"); tb.innerHTML = "";
+  const tb = $("#expense-table tbody"); tb.textContent = "";
   let total = 0;
   const rows = data.expenses.filter((e) => monthFilter === "all" || new Date(e.date).getMonth() === parseInt(monthFilter, 10));
   rows.forEach((e) => {
     total += e.amount;
     const tr = document.createElement("tr");
-    [e.date, e.category, e.desc, fmtRM(e.amount)].forEach((v, idx) => {
-      const td = document.createElement("td"); if (idx === 3) td.className = "num"; td.textContent = v; tr.appendChild(td);
-    });
+    addCell(tr, e.date);
+    addCell(tr, e.category);
+    addCell(tr, e.desc);
+    addCell(tr, fmtRM(e.amount), "num");
     tb.appendChild(tr);
   });
   $("#expense-table tfoot").innerHTML =
@@ -178,15 +175,29 @@ function renderExpenseTable(data, monthFilter) {
 }
 
 function renderBookingTable(data) {
-  const tb = $("#booking-table tbody"); tb.innerHTML = "";
+  const tb = $("#booking-table tbody"); tb.textContent = "";
   data.bookings.forEach((b) => {
     const tr = document.createElement("tr");
     const statusClass = b.status === "Lunas" ? "ok" : b.status === "Deposit" ? "warn" : "bad";
-    tr.innerHTML =
-      `<td>${b.guest}</td><td>${b.pkg}</td><td>${b.checkin}</td><td>${b.nights}</td>` +
-      `<td class="num">${fmtRM(b.amount)}</td><td><span class="badge ${statusClass}">${b.status}</span></td>`;
+    addCell(tr, b.guest, "", "Tetamu");
+    addCell(tr, b.pkg, "", "Pakej");
+    addCell(tr, b.checkin, "", "Daftar masuk");
+    addCell(tr, b.nights, "", "Malam");
+    addCell(tr, fmtRM(b.amount), "num", "Jumlah");
+    const st = addCell(tr, "", "", "Status");
+    const badge = document.createElement("span");
+    badge.className = "badge " + statusClass;
+    badge.textContent = b.status;
+    st.appendChild(badge);
     tb.appendChild(tr);
   });
+}
+
+function renderReportSummary(t) {
+  const el = $("#report-summary");
+  if (!el) return;
+  el.textContent =
+    `Tempoh dipilih: ${periodLabel()}. Pendapatan ${fmtRM(t.income)}, perbelanjaan ${fmtRM(t.expenses)}, untung bersih ${fmtRM(t.profit)}.`;
 }
 
 /* ---------- Muat & render ---------- */
@@ -199,12 +210,11 @@ async function load() {
 function render() {
   const data = state.data;
   const t = totals(data, state.month);
-  $("#exp-cat-period").textContent = state.month === "all" ? "Sepanjang tahun" : MONTHS_MS[parseInt(state.month, 10)];
-  renderKPI(t);
-  renderCharts(data, state.month);
-  renderIncomeTable(data);
-  renderExpenseTable(data, state.month);
-  renderBookingTable(data);
+  if ($("#kpi-income")) renderKPI(t);
+  if ($("#income-table")) renderIncomeTable(data);
+  if ($("#expense-table")) renderExpenseTable(data, state.month);
+  if ($("#booking-table")) renderBookingTable(data);
+  renderReportSummary(t);
 }
 
 /* ---------- Eksport PDF ---------- */
@@ -213,10 +223,10 @@ function downloadPDF() {
   const doc = new jsPDF();
   const data = state.data;
   const t = totals(data, state.month);
-  const periodLabel = state.month === "all" ? `Tahun ${state.year}` : `${MONTHS_MS[parseInt(state.month, 10)]} ${state.year}`;
+  const label = periodLabel();
 
   doc.setFontSize(18); doc.text("Mama Homestay Papar", 14, 18);
-  doc.setFontSize(12); doc.setTextColor(120); doc.text("Laporan Kewangan - " + periodLabel, 14, 26);
+  doc.setFontSize(12); doc.setTextColor(120); doc.text("Laporan Kewangan - " + label, 14, 26);
   doc.setTextColor(0);
 
   doc.setFontSize(11);
@@ -247,7 +257,7 @@ function downloadPDF() {
   doc.setFontSize(9); doc.setTextColor(140);
   doc.text("Dijana oleh Dashboard Admin Mama Homestay - data contoh.", 14, doc.internal.pageSize.getHeight() - 10);
 
-  doc.save(`Laporan_MamaHomestay_${periodLabel.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Laporan_MamaHomestay_${label.replace(/\s+/g, "_")}.pdf`);
 }
 
 /* ---------- Eksport CSV ---------- */
@@ -267,8 +277,10 @@ function downloadCSV() {
 }
 
 function setupExports() {
-  $("#download-pdf").addEventListener("click", downloadPDF);
-  $("#download-csv").addEventListener("click", downloadCSV);
+  const pdf = $("#download-pdf");
+  const csv = $("#download-csv");
+  if (pdf) pdf.addEventListener("click", downloadPDF);
+  if (csv) csv.addEventListener("click", downloadCSV);
 }
 
 /* ---------- Mula ---------- */
@@ -280,4 +292,4 @@ function init() {
   load();
 }
 
-document.addEventListener("DOMContentLoaded", setupLock);
+document.addEventListener("DOMContentLoaded", gate);

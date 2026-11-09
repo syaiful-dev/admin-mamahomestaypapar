@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pendapatan - Mama Homestay Admin</title>
+  <meta name="theme-color" content="#b05f45" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b05f45'/%3E%3Cpath d='M32 14 12 32h8v18h24V32h8z' fill='%23faf5ee'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="income">
+  <!-- Bar notis dummy: padam sebelum guna sebenar -->
+  <div class="dummy-bar">Dashboard contoh. Semua data adalah dummy untuk tujuan paparan.</div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="side-brand">
+        <span class="side-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></span>
+        <span>Mama Homestay</span>
+      </div>
+      <nav class="side-nav" aria-label="Menu utama">
+        <a href="index.html">Ringkasan</a>
+        <a href="income.html" class="is-active" aria-current="page">Pendapatan</a>
+        <a href="expenses.html">Perbelanjaan</a>
+        <a href="bookings.html">Tempahan</a>
+        <a href="report.html">Laporan</a>
+      </nav>
+      <div class="side-foot">
+        <button type="button" id="logout" class="btn btn-ghost btn-block">Log keluar</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button type="button" id="menu-toggle" class="icon-btn" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="topbar-title">
+          <h1 id="page-title">Pendapatan</h1>
+          <p class="data-source" id="data-source">Sumber data: contoh (dummy)</p>
+        </div>
+        <div class="topbar-controls">
+          <label class="sr-only" for="period">Tahun</label>
+          <select id="period">
+            <option value="2026">Tahun 2026</option>
+            <option value="2025">Tahun 2025</option>
+          </select>
+
+          <button type="button" id="refresh" class="btn btn-outline">Muat semula</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="card table-card">
+          <div class="card-head"><h2>Laporan pendapatan bulanan</h2></div>
+          <div class="table-wrap">
+            <table id="income-table">
+              <thead>
+                <tr><th>Bulan</th><th class="num">Tempahan</th><th class="num">Malam</th><th class="num">Pendapatan (RM)</th></tr>
+              </thead>
+              <tbody></tbody>
+              <tfoot></tfoot>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
