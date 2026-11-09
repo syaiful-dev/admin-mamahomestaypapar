@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kira-kira Bulanan - Mama Homestay Admin</title>
+  <meta name="theme-color" content="#b05f45" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23b05f45'/%3E%3Cpath d='M32 14 12 32h8v18h24V32h8z' fill='%23faf5ee'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="monthly">
+  <!-- Bar notis dummy: padam sebelum guna sebenar -->
+  <div class="dummy-bar">Dashboard contoh. Semua data adalah dummy untuk tujuan paparan.</div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar" id="sidebar">
+      <div class="side-brand">
+        <span class="side-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg></span>
+        <span>Mama Homestay</span>
+      </div>
+      <nav class="side-nav" aria-label="Menu utama">
+        <a href="index.html">Ringkasan</a>
+        <a href="income.html">Pendapatan</a>
+        <a href="expenses.html">Perbelanjaan</a>
+        <a href="monthly.html" class="is-active" aria-current="page">Kira-kira Bulanan</a>
+        <a href="bookings.html">Tempahan</a>
+        <a href="report.html">Laporan</a>
+      </nav>
+      <div class="side-foot">
+        <button type="button" id="logout" class="btn btn-ghost btn-block">Log keluar</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button type="button" id="menu-toggle" class="icon-btn" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="topbar-title">
+          <h1 id="page-title">Kira-kira Bulanan</h1>
+          <p class="data-source" id="data-source">Sumber data: contoh (dummy)</p>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- 1. Pilih bulan -->
+        <section class="card">
+          <div class="card-head"><h2>Pilih bulan</h2></div>
+          <div class="calc-picker">
+            <label for="calc-month">Bulan</label>
+            <select id="calc-month"></select>
+            <label for="calc-year">Tahun</label>
+            <select id="calc-year"></select>
+            <span class="calc-status" id="calc-status" aria-live="polite"></span>
+          </div>
+        </section>
+
+        <!-- 2. Isi setiap bulan -->
+        <section class="card">
+          <div class="card-head"><h2>Isi setiap bulan</h2></div>
+          <div class="calc-inputs">
+            <div class="calc-field">
+              <label for="calc-income">Pendapatan, A (RM)</label>
+              <input id="calc-income" type="number" min="0" step="any" inputmode="decimal" />
+              <p class="hint" id="calc-income-hint"></p>
+            </div>
+            <div class="calc-field">
+              <label for="calc-half">Cleaning half, B (bilangan)</label>
+              <input id="calc-half" type="number" min="0" step="1" inputmode="numeric" />
+              <p class="hint">Kosong = 0.</p>
+            </div>
+            <div class="calc-field">
+              <label for="calc-full">Cleaning full, C (bilangan)</label>
+              <input id="calc-full" type="number" min="0" step="1" inputmode="numeric" />
+              <p class="hint">Kosong = 0.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Keputusan ringkas -->
+        <section class="kpi-grid three" aria-label="Ringkasan bulan ini">
+          <article class="kpi card">
+            <p class="kpi-label">Pendapatan (A)</p>
+            <p class="kpi-value" id="sum-income">RM0.00</p>
+            <p class="kpi-delta" id="sum-income-note"></p>
+          </article>
+          <article class="kpi card">
+            <p class="kpi-label">Jumlah perbelanjaan (D)</p>
+            <p class="kpi-value" id="sum-expense">RM0.00</p>
+            <p class="kpi-delta">2 + 3 + 4 + 6 + 7 + 8</p>
+          </article>
+          <article class="kpi card">
+            <p class="kpi-label">Bonus (A - D)</p>
+            <p class="kpi-value" id="sum-bonus">RM0.00</p>
+            <p class="kpi-delta" id="sum-bonus-note"></p>
+          </article>
+        </section>
+
+        <!-- 4. Pengiraan terperinci -->
+        <section class="card table-card">
+          <div class="card-head"><h2>Pengiraan terperinci</h2></div>
+          <p class="muted small calc-help">Kotak kadar/nilai boleh diisi. <strong>Kosongkan untuk guna nilai lalai</strong> (ditunjuk dalam kotak).</p>
+          <div class="table-wrap">
+            <table id="calc-table" class="calc-table">
+              <thead>
+                <tr><th>Perkara</th><th class="num">Kadar / nilai</th><th class="num">Jumlah</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 5. Jumlah diterima setiap orang -->
+        <section class="card">
+          <div class="card-head"><h2>Jumlah diterima setiap orang</h2></div>
+          <ul class="payout-list" id="payout-list"></ul>
+        </section>
+
+        <!-- 6. Rekod disimpan -->
+        <section class="card table-card">
+          <div class="card-head"><h2>Rekod bulan disimpan</h2></div>
+          <p class="muted small" id="history-empty">Belum ada bulan disimpan. Isi mana-mana medan di atas dan ia akan disimpan secara automatik.</p>
+          <div class="table-wrap">
+            <table id="history-table">
+              <thead>
+                <tr><th>Bulan</th><th class="num">Pendapatan</th><th class="num">Perbelanjaan</th><th class="num">Bonus</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 7. Tindakan -->
+        <section class="card">
+          <div class="card-head"><h2>Urus data</h2></div>
+          <p class="muted small">Data disimpan dalam pelayar ini sahaja. Eksport fail sandaran secara berkala, terutama sebelum membersihkan data pelayar atau bertukar peranti.</p>
+          <div class="calc-actions">
+            <button type="button" id="calc-reset" class="btn btn-outline">Kosongkan input bulan ini</button>
+            <button type="button" id="calc-export" class="btn btn-outline">Eksport sandaran</button>
+            <label class="btn btn-outline calc-import-btn" for="calc-import">Import sandaran</label>
+            <input type="file" id="calc-import" accept=".json,application/json" class="sr-only" />
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="monthly.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

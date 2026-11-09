@@ -13,6 +13,7 @@ supaya anda hanya nampak satu perkara pada satu masa:
 | `index.html`    | **Ringkasan**: 4 kad KPI (pendapatan, perbelanjaan, untung bersih, kadar penghunian) + pautan pantas | Tahun, Bulan |
 | `income.html`   | **Pendapatan**: laporan pendapatan bulanan + jumlah            | Tahun          |
 | `expenses.html` | **Perbelanjaan**: kira-kira perbelanjaan + jumlah              | Tahun, Bulan   |
+| `monthly.html`  | **Kira-kira Bulanan**: kira perbelanjaan, gaji, insentif, simpanan dan bonus bulanan | (halaman sendiri) |
 | `bookings.html` | **Tempahan**: senarai tempahan + status bayaran (Lunas / Deposit / Tertunggak). Pada telefon setiap tempahan jadi satu kad | Tahun |
 | `report.html`   | **Laporan**: ringkasan tempoh dipilih + muat turun PDF dan CSV | Tahun, Bulan   |
 
@@ -68,3 +69,36 @@ sebenar sehingga log masuk sebenar disediakan.
 - Peringatan check-in/check-out hari ini.
 - Pengiraan automatik dari tempahan terus ke pendapatan bulanan.
 - Jadual untung bersih bulanan.
+
+## Kira-kira Bulanan (`monthly.html` + `monthly.js`)
+
+Mengira perbelanjaan, gaji, insentif, utiliti, simpanan dan bonus untuk satu bulan.
+
+**Isi setiap bulan:** Pendapatan (A), bilangan cleaning half (B), bilangan cleaning full (C).
+Jika A dibiarkan kosong, ia diambil daripada tab Pendapatan untuk bulan itu. B dan C kosong = 0.
+
+**Pengiraan** (ikut nombor 1 hingga 8):
+
+| # | Item | Formula |
+|---|------|---------|
+| 1 | Pendapatan | A |
+| 2 | Inventori | 10% x A |
+| 3 | Cleaning | B x RM50 + C x RM80 |
+| 4 | Gaji | Umi 8%, Nina 12%, Mama 14%, Epul 8% (daripada A) |
+| 6 | Insentif bulanan | Jika A >= RM3,500: Umi +RM100, Epul +RM100 |
+| 7 | Utiliti | Sampah 70 + Elektrik + Air + Rumput + Wifi 94.35 + Cuckoo 60 |
+| 8 | Simpanan | 20% x A |
+| | **D** (jumlah perbelanjaan) | 2 + 3 + 4 + 6 + 7 + 8 |
+| 5 | **Bonus** | A - D |
+
+**Pemboleh ubah dan nilai lalai:** setiap kadar/nilai dalam jadual ialah kotak yang boleh diisi.
+Kosongkan kotak untuk guna nilai lalai (ditunjuk dalam kotak). Elektrik, Air dan Rumput tiada
+nilai lalai (kosong = 0).
+
+**Ubah nilai lalai:** edit `DEFAULTS` di bahagian atas `monthly.js`. Bulan yang sudah disimpan
+menyimpan salinan nilai lalai ketika itu, jadi mengubah `DEFAULTS` tidak mengubah bulan lama.
+
+**Simpanan data:** disimpan secara automatik dalam pelayar ini (localStorage), satu rekod setiap
+bulan. Data tidak dikongsi antara peranti dan boleh hilang jika data pelayar dibersihkan, jadi
+guna butang **Eksport sandaran** secara berkala dan **Import sandaran** untuk pulihkan.
+Apabila disambung ke Google Sheet nanti, simpanan ini boleh ditukar tanpa mengubah pengiraan.

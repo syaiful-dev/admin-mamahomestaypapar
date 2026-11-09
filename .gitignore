@@ -11,3 +11,6 @@ Thumbs.db
 # Jangan commit data sebenar jika disimpan sebagai fail
 data.local.js
 *.local.csv
+
+# Nota tulisan tangan (mengandungi peratus gaji staf) - jangan publish
+214361.jpeg

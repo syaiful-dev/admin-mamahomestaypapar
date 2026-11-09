@@ -79,6 +79,7 @@ function setupNav() {
 /* ---------- Penapis tempoh (hanya pada halaman yang menggunakannya) ---------- */
 function setupFilters() {
   const period = $("#period");
+  if (!period) return; // halaman tanpa penapis (contoh: Kira-kira Bulanan)
   const monthSel = $("#month");
 
   period.value = String(state.year);
@@ -290,6 +291,7 @@ function init() {
   setupExports();
   setupLogout();
   load();
+  if (window.MonthlyPage) window.MonthlyPage.init();
 }
 
 document.addEventListener("DOMContentLoaded", gate);
